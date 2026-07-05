@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <description>Verify Code</description>
+        <name>VerifyCustomerCode</name>
+        <label>Verify Customer Code</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <actionName>verifyCustomerCode</actionName>
+        <actionType>verifyCustomerCode</actionType>
+        <connector>
+            <targetReference>DoCodesMatch</targetReference>
+        </connector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>customerCode</name>
+            <value>
+                <elementReference>customerCode</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>authenticationKey</name>
+            <value>
+                <elementReference>authenticationKey</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>verifyCustomerCode</nameSegment>
+        <offset>0</offset>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </actionCalls>
+    <apiVersion>65.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <assignments>
+        <description>Sets the isVerified variable to false.</description>
+        <name>SetIsVerifiedToFalse</name>
+        <label>Set Verified to False</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>isVerified</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>messageAfterVerification</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>notVerified</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>customerId</assignToReference>
+            <operator>Assign</operator>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>customerType</assignToReference>
+            <operator>Assign</operator>
+        </assignmentItems>
+    </assignments>
+    <assignments>
+        <description>Sets the isVerified variable to true.</description>
+        <name>SetIsVerifiedToTrue</name>
+        <label>Set Verified to True</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>isVerified</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>customerId</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>customerId</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>customerType</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>customerType</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>messageAfterVerification</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>verified</elementReference>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <constants>
+        <description>Message displayed when verification is unsuccessful.</description>
+        <name>notVerified</name>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>Your verification code was incorrect. Please check the code and try again. If you did not receive a verification code, you can request a new one.</stringValue>
+        </value>
+    </constants>
+    <constants>
+        <description>Message displayed when verification is successful.</description>
+        <name>verified</name>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>Your verification was successful! You can now proceed with the next steps.</stringValue>
+        </value>
+    </constants>
+    <decisions>
+        <description>Determines whether the customerCode value matches the verificationCode value.</description>
+        <name>DoCodesMatch</name>
+        <label>Do Codes Match?</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnector>
+            <targetReference>SetIsVerifiedToFalse</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>No(Default)</defaultConnectorLabel>
+        <rules>
+            <name>CodesMatch</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>VerifyCustomerCode.isVerified</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>SetIsVerifiedToTrue</targetReference>
+            </connector>
+            <label>Yes</label>
+        </rules>
+    </decisions>
+    <description>Verify A Customer by their verification code.</description>
+    <environments>Default</environments>
+    <interviewLabel>Verify Code {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Verify Code</label>
+    <overriddenFlow>SvcCopilotTmpl__VerifyCode</overriddenFlow>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <runInMode>SystemModeWithoutSharing</runInMode>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>VerifyCustomerCode</targetReference>
+        </connector>
+    </start>
+    <status>Active</status>
+    <variables>
+        <name>authenticationKey</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <description>Stores the user-provided verification code that&apos;s passed into the flow.</description>
+        <name>customerCode</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <description>Stores the UserId or ContactID of the User</description>
+        <name>customerId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+    <variables>
+        <description>Stores the Id type whether it is User or Contact</description>
+        <name>customerType</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+    <variables>
+        <description>Stores a boolean value that represents whether the codes passed into the flow match. Is available for output.</description>
+        <name>isVerified</name>
+        <dataType>Boolean</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+    <variables>
+        <description>Message displayed to the user after the verification process is complete.</description>
+        <name>messageAfterVerification</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+</Flow>

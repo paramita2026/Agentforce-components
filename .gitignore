@@ -1,0 +1,5 @@
+.sf/
+.sfdx/
+node_modules/
+.env
+*.bak
