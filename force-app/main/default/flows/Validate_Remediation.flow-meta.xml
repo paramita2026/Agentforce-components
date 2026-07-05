@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>65.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <assignments>
+        <description>Proposed amount passes all checks.</description>
+        <name>Assign_Approved</name>
+        <label>Assign Approved</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>valid</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>reason</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>Approved.</stringValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <assignments>
+        <description>Seed the remaining monthly budget from the budget constant.</description>
+        <name>Assign_Init_Budget</name>
+        <label>Assign Init Budget</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>remainingBudget</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>MONTHLY_BUDGET</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Validate</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
+        <description>Proposed amount is zero or negative.</description>
+        <name>Assign_Not_Positive</name>
+        <label>Assign Not Positive</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>valid</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>reason</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>Amount must be positive.</stringValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <assignments>
+        <description>Proposed amount exceeds the remaining monthly budget.</description>
+        <name>Assign_Over_Budget</name>
+        <label>Assign Over Budget</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>valid</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>reason</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>Over remaining monthly budget.</stringValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <assignments>
+        <description>Proposed amount exceeds the severity credit ceiling.</description>
+        <name>Assign_Over_Ceiling</name>
+        <label>Assign Over Ceiling</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>valid</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>reason</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>Exceeds the severity credit ceiling.</stringValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <constants>
+        <description>Default monthly remediation budget used when no spend tracking is wired in. Adjust as needed.</description>
+        <name>MONTHLY_BUDGET</name>
+        <dataType>Number</dataType>
+        <value>
+            <numberValue>500.0</numberValue>
+        </value>
+    </constants>
+    <decisions>
+        <description>Run the remediation validation checks in priority order.</description>
+        <name>Validate</name>
+        <label>Validate</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnector>
+            <targetReference>Assign_Approved</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Approved</defaultConnectorLabel>
+        <rules>
+            <name>Not_Positive</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>proposedAmount</leftValueReference>
+                <operator>LessThanOrEqualTo</operator>
+                <rightValue>
+                    <numberValue>0.0</numberValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Assign_Not_Positive</targetReference>
+            </connector>
+            <label>Not Positive</label>
+        </rules>
+        <rules>
+            <name>Over_Ceiling</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>proposedAmount</leftValueReference>
+                <operator>GreaterThan</operator>
+                <rightValue>
+                    <elementReference>creditCeiling</elementReference>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Assign_Over_Ceiling</targetReference>
+            </connector>
+            <label>Over Ceiling</label>
+        </rules>
+        <rules>
+            <name>Over_Budget</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>proposedAmount</leftValueReference>
+                <operator>GreaterThan</operator>
+                <rightValue>
+                    <elementReference>remainingBudget</elementReference>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Assign_Over_Budget</targetReference>
+            </connector>
+            <label>Over Budget</label>
+        </rules>
+    </decisions>
+    <description>Validates a proposed remediation amount against the severity credit ceiling and the remaining monthly budget. Returns valid, a reason, and the remaining budget.</description>
+    <environments>Default</environments>
+    <interviewLabel>Validate Remediation {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Validate Remediation</label>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Assign_Init_Budget</targetReference>
+        </connector>
+    </start>
+    <status>Active</status>
+    <variables>
+        <description>The merchant Account Id. Passed through for context; not required by the validation logic.</description>
+        <name>accountId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <description>The maximum credit allowed for the incident severity (from IncidentSeverityAction).</description>
+        <name>creditCeiling</name>
+        <dataType>Number</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+        <scale>2</scale>
+    </variables>
+    <variables>
+        <description>The remediation amount proposed by the agent.</description>
+        <name>proposedAmount</name>
+        <dataType>Number</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+        <scale>2</scale>
+    </variables>
+    <variables>
+        <description>Human-readable explanation of the validation result.</description>
+        <name>reason</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+    <variables>
+        <description>The remaining monthly remediation budget after seeding from the budget constant.</description>
+        <name>remainingBudget</name>
+        <dataType>Number</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+        <scale>2</scale>
+    </variables>
+    <variables>
+        <description>True when the proposed amount is approved; false otherwise.</description>
+        <name>valid</name>
+        <dataType>Boolean</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+</Flow>

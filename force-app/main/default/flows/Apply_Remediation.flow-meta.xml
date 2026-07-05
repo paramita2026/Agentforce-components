@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>65.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <assignments>
+        <description>Handle errors from remediation record creation.</description>
+        <name>Assign_Error_Output</name>
+        <label>Assign Error Output</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>isSuccess</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <assignments>
+        <description>Return the created refund number as the confirmation number.</description>
+        <name>Assign_Success_Output</name>
+        <label>Assign Success Output</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>isSuccess</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>confirmationNumber</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Get_Created_Refund.Name</elementReference>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <description>Applies a make-it-right remediation by creating an approved Refund__c record and returning its confirmation number. Adapted from Issue_Refund for the Resolution Center capstone.</description>
+    <environments>Default</environments>
+    <interviewLabel>Apply Remediation {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Apply Remediation</label>
+    <processType>AutoLaunchedFlow</processType>
+    <recordCreates>
+        <description>Create an approved Refund record capturing the remediation.</description>
+        <name>Create_Refund</name>
+        <label>Create Refund</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignRecordIdToReference>createdRefundId</assignRecordIdToReference>
+        <connector>
+            <targetReference>Get_Created_Refund</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Assign_Error_Output</targetReference>
+        </faultConnector>
+        <inputAssignments>
+            <field>Amount__c</field>
+            <value>
+                <elementReference>refundAmount</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Case__c</field>
+            <value>
+                <elementReference>caseId</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Contact__c</field>
+            <value>
+                <elementReference>verifiedContactId</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Issue_Date__c</field>
+            <value>
+                <elementReference>$Flow.CurrentDate</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Reason__c</field>
+            <value>
+                <elementReference>refundReason</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Status__c</field>
+            <value>
+                <stringValue>Approved</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Storefront__c</field>
+            <value>
+                <elementReference>storefrontId</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Refund__c</object>
+    </recordCreates>
+    <recordLookups>
+        <description>Retrieve the created refund so its auto-number Name can be returned.</description>
+        <name>Get_Created_Refund</name>
+        <label>Get Created Refund</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Assign_Success_Output</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>createdRefundId</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Refund__c</object>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>Name</queriedFields>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Create_Refund</targetReference>
+        </connector>
+    </start>
+    <status>Active</status>
+    <variables>
+        <description>The Case Id the remediation applies to. Optional.</description>
+        <name>caseId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <description>The created Refund record number, returned as the confirmation number.</description>
+        <name>confirmationNumber</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+    <variables>
+        <description>Stores the Id of the created refund record.</description>
+        <name>createdRefundId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <description>Indicates whether the remediation was applied successfully (true) or encountered an error (false).</description>
+        <name>isSuccess</name>
+        <dataType>Boolean</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+    <variables>
+        <description>The remediation amount in dollars, mapped to Refund__c.Amount__c.</description>
+        <name>refundAmount</name>
+        <dataType>Number</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+        <scale>2</scale>
+    </variables>
+    <variables>
+        <description>A short explanation of why the remediation was issued, mapped to Refund__c.Reason__c.</description>
+        <name>refundReason</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <description>An optional Storefront Id to link the remediation to a specific location.</description>
+        <name>storefrontId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <description>An optional verified Contact Id for the customer receiving the remediation.</description>
+        <name>verifiedContactId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+</Flow>

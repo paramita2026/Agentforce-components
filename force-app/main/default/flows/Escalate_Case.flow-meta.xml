@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>65.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <assignments>
+        <description>Assign error status and fault message when the flow encounters an issue.</description>
+        <name>Assign_Error_Output</name>
+        <label>Assign Error Output</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>isSuccess</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>resultMessage</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>$Flow.FaultMessage</elementReference>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <assignments>
+        <description>Assign escalation fields on the case record.</description>
+        <name>Assign_Escalation_Fields</name>
+        <label>Assign Escalation Fields</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>Get_Case.IsEscalated</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>Get_Case.Priority</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>High</stringValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>Get_Case.Description</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>updatedDescription</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Update_Case_Record</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
+        <description>Assign success status and confirmation message after the case is escalated.</description>
+        <name>Assign_Success_Output</name>
+        <label>Assign Success Output</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>isSuccess</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>resultMessage</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>successMessageFormula</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>returnedCase</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Get_Case</elementReference>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <description>Escalate an existing case by setting IsEscalated to true, bumping priority to High, and appending the escalation reason to the case description.</description>
+    <environments>Default</environments>
+    <formulas>
+        <description>Success message including the case number.</description>
+        <name>successMessageFormula</name>
+        <dataType>String</dataType>
+        <expression>&apos;Case #&apos; &amp; {!Get_Case.CaseNumber} &amp; &apos; has been escalated to High priority.&apos;</expression>
+    </formulas>
+    <formulas>
+        <description>Appends the escalation reason to the existing case description.</description>
+        <name>updatedDescription</name>
+        <dataType>String</dataType>
+        <expression>IF(ISBLANK({!Get_Case.Description}), &apos;&apos;, {!Get_Case.Description} &amp; BR()) &amp; &apos;--- Escalation Reason (&apos; &amp; TEXT({!$Flow.CurrentDateTime}) &amp; &apos;) --- &apos; &amp; {!escalationReason}</expression>
+    </formulas>
+    <interviewLabel>Escalate Case {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Escalate Case</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <description>Look up the case record by the provided case ID.</description>
+        <name>Get_Case</name>
+        <label>Get Case</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Assign_Escalation_Fields</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Assign_Error_Output</targetReference>
+        </faultConnector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>caseId</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Case</object>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>CaseNumber</queriedFields>
+        <queriedFields>Subject</queriedFields>
+        <queriedFields>Status</queriedFields>
+        <queriedFields>Priority</queriedFields>
+        <queriedFields>IsEscalated</queriedFields>
+        <queriedFields>Description</queriedFields>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordUpdates>
+        <description>Update the case record with escalation fields.</description>
+        <name>Update_Case_Record</name>
+        <label>Update Case Record</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Assign_Success_Output</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Assign_Error_Output</targetReference>
+        </faultConnector>
+        <inputReference>Get_Case</inputReference>
+    </recordUpdates>
+    <runInMode>SystemModeWithoutSharing</runInMode>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Get_Case</targetReference>
+        </connector>
+    </start>
+    <status>Active</status>
+    <variables>
+        <description>The Id of the case to escalate.</description>
+        <name>caseId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <description>The reason for escalating this case. This will be appended to the case description.</description>
+        <name>escalationReason</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <description>Indicates whether the flow executed successfully (true) or encountered an error (false).</description>
+        <name>isSuccess</name>
+        <dataType>Boolean</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+    <variables>
+        <description>A message providing details about the flow execution, such as success confirmation or error messages.</description>
+        <name>resultMessage</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+    <variables>
+        <description>The updated Case record. Returns null if the flow encounters an error.</description>
+        <name>returnedCase</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+        <objectType>Case</objectType>
+    </variables>
+</Flow>

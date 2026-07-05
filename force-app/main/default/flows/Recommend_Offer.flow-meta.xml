@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>65.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <assignments>
+        <description>Recommend a Critical-tier offer.</description>
+        <name>Assign_Critical</name>
+        <label>Assign Critical</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>recommendedOffer</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>20% off next 30 days + delivery fee waiver</stringValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>recommendedAmount</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <numberValue>50.0</numberValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <assignments>
+        <description>Recommend the default (Medium/Low) offer.</description>
+        <name>Assign_Default</name>
+        <label>Assign Default</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>recommendedOffer</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>10% off next order</stringValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>recommendedAmount</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <numberValue>15.0</numberValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <assignments>
+        <description>Recommend a High-tier offer.</description>
+        <name>Assign_High</name>
+        <label>Assign High</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <assignmentItems>
+            <assignToReference>recommendedOffer</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>15% off next 30 days</stringValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>recommendedAmount</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <numberValue>35.0</numberValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <decisions>
+        <description>Choose an offer based on the merchant risk level.</description>
+        <name>Evaluate_Risk</name>
+        <label>Evaluate Risk</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <defaultConnector>
+            <targetReference>Assign_Default</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Medium or Low</defaultConnectorLabel>
+        <rules>
+            <name>Critical_Rule</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>riskLevel</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Critical</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Assign_Critical</targetReference>
+            </connector>
+            <label>Critical</label>
+        </rules>
+        <rules>
+            <name>High_Rule</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>riskLevel</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>High</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Assign_High</targetReference>
+            </connector>
+            <label>High</label>
+        </rules>
+    </decisions>
+    <description>Recommends an offer description and dollar amount for a merchant based on their risk level. Critical and High map to richer offers; everything else gets the default offer.</description>
+    <environments>Default</environments>
+    <interviewLabel>Recommend Offer {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Recommend Offer</label>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Evaluate_Risk</targetReference>
+        </connector>
+    </start>
+    <status>Active</status>
+    <variables>
+        <description>The Account Id of the merchant being scored. Passed through for context; not required by the recommendation logic.</description>
+        <name>accountId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <description>JSON breakdown of the merchant risk factors. Passed through for context; not required by the recommendation logic.</description>
+        <name>factorsJson</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <description>The recommended dollar amount of the offer.</description>
+        <name>recommendedAmount</name>
+        <dataType>Number</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+        <scale>0</scale>
+    </variables>
+    <variables>
+        <description>The recommended offer description to present to the merchant.</description>
+        <name>recommendedOffer</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+    <variables>
+        <description>The merchant risk level: Critical, High, Medium, or Low.</description>
+        <name>riskLevel</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+</Flow>
